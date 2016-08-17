@@ -1,0 +1,31 @@
+#!/bin/bash
+
+modprobe -r iTCO_wdt
+
+arg=$1
+if [ -z $WD_MODE ]; then
+	WD_MODE=0
+fi
+
+if [ -z $NO_ACPI ]; then
+	param=""
+else
+	param="no_acpi=$NO_ACPI"
+fi
+
+echo "dmec parameters: $param"
+
+if [[ $1 == "-r" ]]; then
+	echo 0x50 > /sys/bus/i2c/devices/i2c-11/delete_device
+	rmmod gpio-dmec.ko
+	rmmod i2c-dmec.ko
+	rmmod wdt-dmec.ko
+	rmmod dmec.ko
+else
+	insmod dmec.ko $param
+	insmod i2c-dmec.ko
+	insmod wdt-dmec.ko win_mode=$WD_MODE
+	insmod gpio-dmec.ko
+	echo 24c32 0x50 > /sys/bus/i2c/devices/i2c-11/new_device
+fi
+
